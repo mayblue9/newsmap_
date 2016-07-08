@@ -1,0 +1,427 @@
+{% load static %}
+<html>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<head>
+    <!--
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootswatch/3.2.0/sandstone/bootstrap.min.css">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
+    -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/font-awesome.min.css' %}">
+
+
+    <style>
+        /* base */
+        body {
+            font-family: sans-serif;
+            width: 800px;
+
+            margin: 1em auto;
+        }
+
+        body, a, a:focus, a:active {
+            color: #333;
+        }
+
+        .nav {
+            text-align: center;
+            margin-bottom: 2em;
+        }
+        .nav h1 {
+            margin-bottom: .5em;
+        }
+
+        .nav a {
+            width: 10px;
+            height: 10px;
+            display: inline-block;
+            border-radius: 50%;
+            border: 2px solid #555;
+        }
+
+        .nav a:hover {
+            background-color: #bbb;
+        }
+        .nav a.active {
+            background-color: #555;
+        }
+
+        /*angular */
+        h1 {
+            color:  #68b5dd;
+        }
+        .left-panel {
+            float: left;
+            width: 300px;
+        }
+
+        result-info div {
+            border: 2px solid #68b5dd;
+            border-radius: 4px;
+            padding: 0 1em;
+            margin: 1em 0;
+        }
+
+        result-info h3 {
+            color:  #68b5dd;
+        }
+
+        .chart-panel {
+            border: 1px solid #999;
+            padding: 1em;
+            float: right;
+            width: 430px;
+            height: 500px;
+        }
+
+        .chart-panel circle {
+            /*fill: #f8f8f8 !important;
+            stroke: #bbb;*/
+            fill:  #68b5dd !important;
+            stroke: #B3B3B3;
+            stroke-width: 2px;
+        }
+
+        .chart-panel .node text {
+            fill: white;
+        }
+
+        .chart-panel .message {
+            fill: #47b4b3 !important;
+            font-weight: bold;
+        }
+
+
+        .chart-panel2 {
+            border: 1px solid #999;
+            padding: 1em;
+            float: right;
+            width: 430px;
+            height: 450px;
+        }
+
+        .link {
+            fill: none;
+            stroke: #bbb;
+            stroke-width: 2px;
+
+        }
+        .node {
+            font-color: #bbb;
+        }
+
+        text {
+            fill: #654e75;!important;
+            font: 13px sans-serif;
+            pointer-events: none;
+
+        }
+
+        div.graph {
+            width: 430px;
+            height:500px;
+            margin-top: 20px;
+
+            border: 1px solid #999;
+            padding: 1em;
+            float: right;
+        }
+
+    </style>
+
+    <script src="{% static 'js/angular.js' %}" type="text/javascript"></script>
+    <script src="{% static 'js/d3.js' %}" ></script>
+    <script src="{% static 'js/bubble-chart.js' %}" type="text/javascript" ></script>
+
+
+</head>
+
+
+<body class='angular'>
+
+<!-- search_form -->
+<form action='/search_an/' method='get'>
+<label for='searchWord'>검색키워드</label>
+<input type='text' name='word1' id="word1"/>
+<input type="submit" value="검색"/>
+</br>
+</form>
+<!--end search-->
+
+
+<div class="nav">
+    <!--<h3>Word2vec</h3> -->
+</div>
+
+<div ng-app="d3-demo">
+
+    <div ng-controller="PowermapCtrl">
+
+        <div class="top-pannel">
+
+
+            <!--add table2 -->
+            {% verbatim %}
+            <table class="table table-bordered table-striped table-hover">
+                <thead>
+                <tr>
+                    <th>Word</th>
+                    <th>Score</th>
+                    <th>Count</th>
+                </tr>
+                <tbody>
+                <tr ng-repeat="result in result |filter: query | orderBy:orderProperty">
+                    <td>{{result.text}}</td>
+                    <td>{{result.score}}</td>
+                    <td>{{result.count}}</td>
+                </tr>
+                </tbody>
+                </thead>
+            </table>
+            {% endverbatim %}
+            <!--add table2 -->
+
+
+        </div>
+
+        <div class="left-panel">
+            <input type="text" ng-model="query" placeholder="Filter">
+            <input type="radio" ng-model="selectedItem" value="score">Score
+            <input type="radio" ng-model="selectedItem" value="count">Count
+
+            <result-info ng-repeat="c in filteredResult" result="c" selected-item="selectedItem"></result-info>
+        </div>
+
+        <div class="chart-panel">
+            <bubble-chart data="chartData"></bubble-chart>
+        </div>
+        <div class="graph"></div>
+
+    </div>
+</div>
+
+<script>
+
+    //start network graph
+
+    var data1={{ json_test|safe }};
+    var word1 = "{{word1|safe}}";
+
+
+    //network graph add
+    var nodes= {{ json_test|safe }};
+    var keyword = [{"text": word1 , "score": 1 , "count": 1}];
+    nodes.unshift(keyword[0]);
+
+    var links = new Array();
+
+    var index = 0;
+    // Compute nodes from the links.
+    nodes.forEach(function(node) {
+        if (index != 0){
+            links.push({ "source": nodes[0], "target": node}); }
+        index ++;
+    });
+
+
+    var width = 400, height = 500;
+
+
+    var  maxValue = d3.max(nodes, function(d) {
+        return d.score*100;
+    });
+
+
+
+
+    var  color1 = d3.scale.linear()
+            .range(["#f7c3a7","#67001f"])
+            .domain([0, maxValue]);
+
+    var color = d3.scale.linear()
+            .range(['#284ff2', '#28cbf2', '#d9a238', '#d94b38', '#b91600'])
+            .domain([1, 0.8, 0.6, 0.3, 0])
+
+
+
+    var force = d3.layout.force()
+            .nodes(nodes)
+            .links(links)
+        //.links(d3.values(links))
+            .size([width, height])
+            .linkDistance(function(d){
+                return (100 / d.target.score);})
+            .charge(-300)
+            .on("tick", tick)
+            .start();
+
+    var svg = d3.select(".graph").append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+
+
+    // add link or arrow
+    var path = svg.append("svg").selectAll("path")
+            .data(force.links())
+            .enter().append("path")
+            .attr("class", "link")
+            .style("stroke",  "pink");
+
+
+
+    // define node
+    var node = svg.selectAll(".node")
+            .data(force.nodes())
+            .enter().append("g")
+            .attr("class", "node")
+          //.on("click", click)
+          //.on("dblclick", dblclick)
+            .call(force.drag);
+
+    // add node
+    node.append("circle")
+          //.attr("r",3.5)
+            .attr("r", function(d){return (30 * (d.score));} )
+            .style("fill", function(d) { return color(d.score); }); //d.name
+
+    // add text
+    node.append("text")
+            .attr("dy", ".35em")
+            .attr("text-anchor", "middle")
+            .text(function(d) { return d.text; })
+            .style("fill","steelblue")
+            .style("font-weight", "bold")
+
+    // add curvy lines
+    function tick() {
+
+        nodes[0].x = width /2;
+        nodes[0].y = height/2;
+        //add curvy line
+        path.attr("d", function(d) {
+
+            var dx = d.target.x - d.source.x,
+                    dy = d.target.y - d.source.y,
+                    dr = Math.sqrt(dx * dx + dy * dy);
+
+            return "M" +
+                    d.source.x + "," +
+                    d.source.y + "A" +
+                    dr + "," + dr + " 0 0,1 " +
+                    d.target.x + "," +
+                    d.target.y;
+        });
+
+        // end curvy line
+
+        node
+                .attr("transform", function(d) {
+                    return "translate(" + d.x + "," + d.y + ")"; });
+
+
+
+    }
+    //end network graph
+
+
+    {% verbatim %}
+    angular.module('d3-demo', [])
+
+            .controller('PowermapCtrl', ['$scope', '$filter', function($scope, $filter) {
+
+                $scope.selectedItem = "score";
+                /*
+                 $scope.result = [
+                 {text: "유시민", score: 0.679243922234, count: 10}
+                 ];
+                 */
+                $scope.result =data1;
+
+
+
+               //share filtered result
+                $scope.$watch('query', function(q) {
+                    $scope.filteredResult = $filter('filter')($scope.result, q);
+
+                });
+
+
+              //selected item
+                $scope.$watchCollection('[filteredResult, selectedItem]', function(arr) {
+                    $scope.chartData = {
+                        name: 'result', //name
+                        children: arr[0].map(function(c) {
+                            return {name: c.text, size: c[arr[1]]}; // c.name
+                        })
+                    };
+                });
+
+
+
+            }])
+
+            .directive('resultInfo', function() {
+                return {
+                    restrict: 'E',
+                    template: '<div><h3>{{result.text}}</h3><p>The {{selectedItem}} was {{result[selectedItem]}}</p></div>',
+                    scope: {
+                        result: '=',
+                        selectedItem: '='
+                    }
+                };
+            })
+
+    {% endverbatim %}
+
+    //Bubble chart directive
+    .directive('bubbleChart', function() {
+        var chart = d3.charts.bubble();
+
+        return {
+            restrict: 'E',
+            scope: {
+                data: '='
+            },
+
+            link: function(scope, element, attrs) {
+
+                scope.$watch('data', function(data) {
+
+                    d3.select(element[0])
+                            .datum(data)
+                            .call(chart);
+
+                });
+            }
+        };
+    })
+        .directive('barChart', function() {
+            var chart1 = d3.chart.bar();
+
+            return {
+                restrict: 'E',
+                scope: {
+                    data: '='
+                },
+
+                link: function(scope, element, attrs) {
+
+
+                    scope.$watch('data', function(data) {
+
+                        d3.select(element[0])
+                                .datum(data)
+                                .call(chart1);
+
+                    });
+                }
+            };
+        });
+
+
+</script>
+
+</body>
+</html>
+

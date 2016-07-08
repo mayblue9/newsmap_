@@ -1,0 +1,596 @@
+<html>
+<head><title>GET 이용 데이터 처리 </title>
+<meta charset="UTF-8">
+    <style>
+        /*_2015.12.01_css update: font, background, box */
+        @import url(http://fonts.googleapis.com/earlyaccess/hanna.css);
+        @import url(http://fonts.googleapis.com/earlyaccess/jejugothic.css);
+        @import url(http://fonts.googleapis.com/earlyaccess/nanumgothic.css);
+        text:hover {
+            stroke: #fd9bf7;/*#cb7f81;/*#fd9bf7;
+           /*
+            stroke: #5cd7e0;
+        */
+        }
+
+        body {
+
+            font: 12px Helvetica;
+            /*
+            font-family: 'Jeju Gothic',"나눔고딕", NanumGothic, Georgia, Serif;
+            */
+            background-color: white;
+
+        }
+
+
+        #fontfamily1 {
+            /*
+             font-family: 'Jeju Gothic', NanumGothic, Georgia, Serif;*/
+        }
+        /*
+        #fontfamily2 {
+            font-family: 돋움, 고딕, 나눔고딕;
+        }
+        */
+
+        #fontweight {
+            font-weight:bold;
+        }
+
+        #fontweight2 {
+            font-weight: 400;
+        }
+
+        .widget {
+            display: inline-block;
+            border: 1px solid #AAA;
+            background: white;
+        }
+        #cloud{
+
+            background: #372830;/*#baa6ae; /*#d8a5a7; /*#8d5f50; /*#8d4e59;*/ /* #e7e7e7;*/
+            font-family: 'Jeju Gothic','Malgun Gothic','Nanum Gothic', serif; /*'Jeju Gothic','Hanna'*/
+            width:530px; height:400px; border: 1px solid #b99c97 /*#AAA*/
+        }
+
+       /*tool-tips*/
+
+
+        .d3-tip {
+            line-height: 1;
+            font-weight: bold;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #efefef;
+            border-radius: 2px;
+        }
+
+        /* triangle extender */
+        .d3-tip:after {
+            box-sizing: border-box;
+            display: inline;
+            font-size: 10px;
+            width: 100%;
+            line-height: 1;
+            color: rgba(0, 0, 0, 0.8);
+            content: "\25BC";
+            position: absolute;
+            text-align: center;
+        }
+
+        /* northward tooltip */
+        .d3-tip.n:after {
+            margin: -1px 0 0 0;
+            top: 100%;
+            left: 0;
+        }
+
+        /* add_05_09 */
+        /* tree diagram */
+          svg{
+            border: 1px solid silver;
+        }
+
+        .node{
+            cursor: pointer;
+        }
+
+        .node circle{
+            stroke: steelblue;
+            stroke-width: 1.5px;
+        }
+
+        .link{
+            fill: none;
+            stroke: lightgray;
+            stroke-width: 1.5px;
+        }
+
+
+
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.16/d3.js"></script>
+    <script src="https://cdn.rawgit.com/jasondavies/d3-cloud/master/build/d3.layout.cloud.js"></script>
+    <script src = "https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.6.7/d3-tip.min.js"></script>
+
+</head>
+
+<br>
+<form action='/search/' method='get'>
+<label for='searchWord'>검색키워드</label>
+<input type='text' name='word1' id="myVal"/>
+<input type="submit" value="검색" />
+</br>
+<!-- input2 --->
+    <!--
+<label for='searchWord'>keyword2</label>
+<input type='text' name='word2' />
+<input type="submit" value="검색" />
+
+-->
+</form>
+<!--
+json 테스트: {{json_test}} </br></br>
+tree data_테스트 : {{tree_data}} </br></br>
+unicode한글 : {{unicode}}
+-->
+ <div class="bike">
+                    <h1> word2vec 결과  </h1>
+
+                    <div id="cloud"></div>
+                    <div id="graph"></div>
+                    <div id="tree"></div>
+
+                    <script type="text/javascript">
+                    console.log(document.getElementById("myVal").name)
+
+                        //sample data
+                      var data1= [{
+                            "topic": 1,
+                            "text": "유시민",
+
+                            "size":  0.780239224434
+                        }, {
+                            "topic": 1,
+                            "text": "정의당",
+                            "weight": 0.155547,
+                            "size":  0.780239224434
+                        }, {
+                            "topic": 1,
+                            "text": "노회찬",
+                            "weight": 0.013578,
+                            "size":  0.780239224434
+                        }];
+
+                        //var data3 =  "{{json_test|escapejs}}";
+                        var data3 = {{ json_test|safe }};
+                       var data4 = "{{ unicode}}";
+                        var data2 = [{
+                            "topic": 1,
+                            "text": "팬",
+                            "weight": 0.018818,
+                            "size": 0.184038
+                        }, {
+                            "topic": 1,
+                            "text": "러블리즈",
+                            "weight": 0.155547,
+                            "size": 0.152053
+                        }, {
+                            "topic": 1,
+                            "text": "즈",
+                            "weight": 0.013578,
+                            "size": 0.132791
+                        }, {
+                            "topic": 1,
+                            "text": "오빠",
+                            "weight": 0.008640,
+                            "size": 0.084497
+                        }, {
+                            "topic": 1,
+                            "text": "콘서트",
+                            "weight": 0.006822,
+                            "size": 0.066718
+                        }, {
+                            "topic": 1,
+                            "text": "회",
+                            "weight": 0.006822,
+                            "size": 0.066718
+                        }, {
+                            "topic": 1,
+                            "text": "말",
+                            "weight": 0.006822,
+                            "size": 0.066718
+                        }, {
+                            "topic": 1,
+                            "text": "종대",
+                            "weight": 0.006822,
+                            "size": 0.066718
+                        }
+                            ,{
+                                "topic": 1,
+                                "text": "종달새",
+                                "weight": 0.003640,
+                                "size": 0.084497
+                            },
+                            {
+                                "topic": 1,
+                                "text": "하늘",
+                                "weight": 0.008640,
+                                "size": 0.084297
+                            },
+                            {
+                                "topic": 1,
+                                "text": "가을날의 저녁바람 ",
+                                "weight": 0.008640,
+                                "size": 0.034297
+                            },
+                            {
+                                "topic": 1,
+                                "text": "변함없는 거리 ",
+                                "weight":0.008640,
+                                "size": 0.034497
+                            },
+                            {
+                                "topic": 1,
+                                "text": "오빠",
+                                "weight": 0.008640,
+                                "size": 0.032
+                            },
+                            {
+                                "topic": 1,
+                                "text": "카라",
+                                "weight": 0.008640,
+                                "size": 0.032
+                            },
+                            {
+                                "topic": 1,
+                                "text": "러블리즈",
+                                "weight": 0.008640,
+                                "size": 0.032
+                            },
+                            {
+                                "topic": 1,
+                                "text": "러블리즈",
+                                "weight": 0.008640,
+                                "size": 0.052
+                            },
+                            {
+                                "topic": 1,
+                                "text": "러블리즈",
+                                "weight": 0.008640,
+                                "size": 0.062
+                            }
+                        ];
+
+                        // end of sample data
+
+                        var weight = 60,
+                                width = 530,
+                                height = 400;
+
+                        var fill = d3.scale.category20b();
+                        var fill2 = d3.scale.category20c();
+
+
+
+                        d3.layout.cloud().size([width, height])
+                                .words(data3)
+                            //.rotate(function() { return ~~(Math.random() * 2) * 90; })
+                                .rotate(0)
+                            // .font("Impact")
+                                .fontSize(function(d) {
+                                    return d.size * weight;
+                                })
+                                .on("end", draw)
+                                .start();
+
+                        function draw(words) {
+                            d3.select("#cloud").append("svg")
+                                    .attr("width", width)
+                                    .attr("height", height)
+                                    .append("g")
+                                    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
+                                    .selectAll("text")
+                                    .data(words)
+                                    .enter().append("text")
+                                    .style("font-size", function(d) {
+                                        return d.size + "px";
+                                    })
+                                // .style("font-family",'Jeju Gothic')
+                                    .style("fill", function(d, i) {
+                                        return fill(i);
+                                    })
+                                    .attr("text-anchor", "middle")
+                                    .attr("transform", function(d) {
+                                        return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+                                    })
+                                    .text(function(d) {
+                                        return d.text;
+                                    });
+                        }
+
+
+             //////******* network graph
+
+
+
+    var nodes = [
+        {x: 10, y: 50, id:"Alice" },
+        {x: 70, y: 10,id:"poet"},
+        {x: 355.932, y: 460.1587,id:"Hapez" },
+        {x: 280, y: 87, id:"sky" },
+        {x: 192, y: 429,id:"Etolie"},
+        {x: 477, y: 332,id:"Piano" }
+
+      ]
+
+
+    var links = [
+        {source: nodes[0], target: nodes[1]},
+        {source: nodes[1], target: nodes[2]},
+        {source: nodes[4], target: nodes[5]},
+        {source: nodes[3], target: nodes[5]},
+        {source: nodes[1], target: nodes[4]}
+    ]
+
+
+
+    var vis = d3.select("#graph")
+            .append("svg")
+            .attr("width", 800).attr("height", 800) //200,200
+             //.data(nodes)
+            .append("g")
+            .attr("transform", "translate(100,150)");
+
+
+
+    //tooltip vis
+    var tip = d3.tip()
+            .attr('class', 'd3-tip')
+            .offset([-10, 0])
+            .html(function(d) {
+                //return "<strong>" + d.id+ "\t" + "id:" + "</strong><br/><span style='color:#fff'>" + d.id + "</span>";
+                return "<strong>" + "\t" + "Id:" + "</strong><br/><span style='color:#fff'>" + d.id + "</span>";
+            })
+
+
+    //
+
+    vis.selectAll(".line")
+            .data(links)
+            .enter()
+            .append("line")
+            .attr("x1", function(d) { return d.source.x })
+            .attr("y1", function(d) { return d.source.y })
+            .attr("x2", function(d) { return d.target.x })
+            .attr("y2", function(d) { return d.target.y })
+            .style("stroke", "rgb(6,120,155)")
+            .style("stroke-linecap","round")
+            .style("stroke-dasharray", "3,3");
+
+
+    vis.selectAll("circle.nodes")
+            .data(nodes)
+            .enter()
+            .append("svg:circle")
+            .attr("cx", function(d) { return d.x; })
+            .attr("cy", function(d) { return d.y; })
+            .attr("r", "5px")
+            .attr("fill", "gray")
+            .style("opacity",".7")
+            .on('mouseover', tip.show)
+            .on('mouseout', tip.hide);
+
+    vis.call(tip);
+
+
+    vis.selectAll("circle.nodes")
+        .data(nodes)
+        .enter()
+        .append("svg:circle")
+
+
+    vis.selectAll('text')
+            .data(nodes)
+            .enter()
+            .append('text')
+            .text(function(d) {return '('+d.x+','+ d.y +')_' + 'ID:'+ d.id; })
+            .attr('x', function(d){ return d.x; })
+            .attr('y', function(d){ return d.y; })
+            .style('font-family', "Malgun-Gothic")
+            .style('font-size', "13px")
+            .style("font-weight", "bold")
+            .style('fill', 'Crimson'); //Midnightblue
+
+//tree diagram ------------------------------------------------------------------
+
+var json4 = {{ tree_data|safe }};
+
+
+    var width = 700;
+    var height = 500;
+    var maxLabel = 150;
+    var duration = 500;
+    var radius = 5;
+
+    var i = 0;
+    var root;
+
+    var tree = d3.layout.tree()
+            .size([height, width]);
+
+    var diagonal = d3.svg.diagonal()
+            .projection(function(d) { return [d.y, d.x]; });
+
+    var svg = d3.select("body").append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            .attr("transform", "translate(" + maxLabel + ",0)");
+
+    root = json4[0];//json4;
+    root.x0 = height / 2;
+    root.y0 = 0;
+
+    root.children.forEach(collapse);
+
+    function update(source)
+    {
+        // Compute the new tree layout.
+        var nodes = tree.nodes(root).reverse();
+        var links = tree.links(nodes);
+
+        // Normalize for fixed-depth.
+        nodes.forEach(function(d) { d.y = d.depth * maxLabel; });
+
+        // Update the nodes…
+        var node = svg.selectAll("g.node")
+                .data(nodes, function(d){
+                    return d.id || (d.id = ++i);
+                });
+
+        // Enter any new nodes at the parent's previous position.
+        var nodeEnter = node.enter()
+                .append("g")
+                .attr("class", "node")
+                .attr("transform", function(d){ return "translate(" + source.y0 + "," + source.x0 + ")"; })
+                .on("click", click);
+
+        nodeEnter.append("circle")
+                .attr("r", 0)
+                .style("fill", function(d){
+                    return d._children ? "lightsteelblue" : "white";
+                });
+
+        nodeEnter.append("text")
+                .attr("x", function(d){
+                    var spacing = computeRadius(d) + 5;
+                    return d.children || d._children ? -spacing : spacing;
+                })
+                .attr("dy", "3")
+                .attr("text-anchor", function(d){ return d.children || d._children ? "end" : "start"; })
+                .text(function(d){ return d.text; })
+                .style("fill-opacity", 0);
+
+        // Transition nodes to their new position.
+        var nodeUpdate = node.transition()
+                .duration(duration)
+                .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
+
+        nodeUpdate.select("circle")
+                .attr("r", function(d){ return computeRadius(d);})
+                .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+
+        nodeUpdate.select("text").style("fill-opacity", 1);
+
+        // Transition exiting nodes to the parent's new position.
+        var nodeExit = node.exit().transition()
+                .duration(duration)
+                .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
+                .remove();
+
+        nodeExit.select("circle").attr("r", 0);
+        nodeExit.select("text").style("fill-opacity", 0);
+
+        // Update the links…
+        var link = svg.selectAll("path.link")
+                .data(links, function(d){ return d.target.id; });
+
+        // Enter any new links at the parent's previous position.
+        link.enter().insert("path", "g")
+                .attr("class", "link")
+                .attr("d", function(d){
+                    var o = {x: source.x0, y: source.y0};
+                    return diagonal({source: o, target: o});
+                });
+
+        // Transition links to their new position.
+        link.transition()
+                .duration(duration)
+                .attr("d", diagonal);
+
+        // Transition exiting nodes to the parent's new position.
+        link.exit().transition()
+                .duration(duration)
+                .attr("d", function(d){
+                    var o = {x: source.x, y: source.y};
+                    return diagonal({source: o, target: o});
+                })
+                .remove();
+
+        // Stash the old positions for transition.
+        nodes.forEach(function(d){
+            d.x0 = d.x;
+            d.y0 = d.y;
+        });
+    }
+
+    function computeRadius(d)
+    {  /*
+        if(d.children || d._children) return radius + (radius * nbEndNodes(d) / 10);
+        else return radius;*/
+        return radius;
+    }
+
+    function nbEndNodes(n)
+    {
+        nb = 0;
+        if(n.children){
+            n.children.forEach(function(c){
+                nb += nbEndNodes(c);
+            });
+        }
+        else if(n._children){
+            n._children.forEach(function(c){
+                nb += nbEndNodes(c);
+            });
+        }
+        else nb++;
+
+        return nb;
+    }
+
+    function click(d)
+    {
+        if (d.children){
+            d._children = d.children;
+            d.children = null;
+        }
+        else{
+            d.children = d._children;
+            d._children = null;
+        }
+        update(d);
+    }
+
+    function dbclick(d){
+        if(d.children){
+            d._chidren= d.children;
+        }
+        else{
+            d.children = d._children;
+            d.children= null;
+        }
+        update(d);
+
+    }
+
+    function collapse(d){
+        if (d.children){
+            d._children = d.children;
+            d._children.forEach(collapse);
+            d.children = null;
+        }
+    }
+
+    update(root);
+
+
+
+                    </script>
+                </div>
+
+
+</body>
+</html>
