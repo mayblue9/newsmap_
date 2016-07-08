@@ -3,16 +3,16 @@ from django.contrib import admin
 from django.conf.urls.static import static
 from django.conf import settings
 ##add REST API
-from rest_framework import routers
-from quickstart import views
+#from rest_framework import routers
+#from quickstart import views
 ##
 ##
 
 
 ###add REST API
-router = routers.DefaultRouter()
-router.register(r'users', views.UserViewSet)
-router.register(r'groups', views.GroupViewSet)
+#router = routers.DefaultRouter()
+#router.register(r'users', views.UserViewSet)
+#router.register(r'groups', views.GroupViewSet)
 
 
 
@@ -25,13 +25,15 @@ urlpatterns = patterns(
     ),
     url(r'^photo/upload/$', 'photo.views.new_photo', name='new_photo'),
     url(r'^photo/$', 'photo.views.single_photo', name='view_single_photo'),
-     url(r'^json/$', 'photo.views.as_json', name='as_json'),
+    url(r'^json/$', 'photo.views.as_json', name='as_json'),
     url(r'^admin/', include(admin.site.urls)),
     ##add REST API
     # Wire up our API using automatic URL routing.
     # Additionally, we include login URLs for the browseable API.
-    url(r'^', include(router.urls)),
-    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+
+    #url(r'^', include(router.urls)),
+    #url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+
    # url(r'^word2vec/$', 'photo.views.word2vec', name='word2vec'),
 
     url(r'^search_form/$', 'photo.views.search_form1'),
